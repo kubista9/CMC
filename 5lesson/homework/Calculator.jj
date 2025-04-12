@@ -1,0 +1,119 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */
+options {
+  static = true;
+}
+
+PARSER_BEGIN(Calculator)
+package calc;
+
+public class Calculator {
+  public static void main(String args []) throws ParseException {
+    double answer;
+    Calculator parser = new Calculator(System.in);
+
+    while (true) {
+      System.out.println("Reading from standard input...");
+      System.out.print("Enter an expression like \"1.5+(2.7+3.1)*4.2;\" :");
+
+      try {
+        answer = Calculator.one_line();
+        System.out.print("Answer = ");
+        System.out.println(answer);
+      } catch (Exception e) {
+        System.out.println("NOK.");
+        System.out.println(e.getMessage());
+        Calculator.ReInit(System.in);
+      } catch (Error e) {
+        System.out.println("Oops.");
+        System.out.println(e.getMessage());
+        break;
+      }
+    }
+  }
+}
+PARSER_END(Calculator)
+
+SKIP : {
+  " " | "\r" | "\t" | "\n"
+}
+
+TOKEN : /* OPERATORS */
+{
+  < PLUS : "+" >
+  | < MINUS : "-" >
+  | < MULTIPLY : "*" >
+  | < DIVIDE : "/" >
+}
+
+TOKEN : {
+  < CONSTANT : (< DIGIT >)+ ("." (< DIGIT >)*)? | "." (< DIGIT >)+ >
+  | < #DIGIT : [ "0"-"9" ] >
+}
+
+double one_line() : {
+  double result = 0.0;
+}
+{
+  result = sum() ";" { return result; }
+  | ";" { return result; }
+}
+
+double sum() : {
+  double result;
+  double value;
+  Token t;
+}
+{
+  result = term()
+  (
+    ( t = < PLUS > | t = < MINUS > )
+    value = term()
+    {
+      if (t.kind == PLUS) {
+        result = result + value;
+      } else {
+        result = result - value;
+      }
+    }
+  )*
+  { return result; }
+}
+
+double term() : {
+  double result, value;
+  Token t;
+}
+{
+  result = unary()
+  (
+    ( t = < MULTIPLY > | t = < DIVIDE > )
+    value = unary()
+    {
+      if (t.kind == MULTIPLY) {
+        result = result * value;
+      } else {
+        result = result / value;
+      }
+    }
+  )*
+  { return result; }
+}
+
+double unary() : {
+  double result;
+}
+{
+  < MINUS > result = element() { return 0.0 - result; }
+  | result = element() { return result; }
+}
+
+double element() : {
+  double result;
+  Token t;
+}
+{
+  t = < CONSTANT > { return Double.parseDouble(t.image); }
+  | "(" result = sum() ")" { return result; }
+}
