@@ -1,0 +1,149 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */
+options {
+  static = true;
+}
+
+PARSER_BEGIN(Calculator)
+
+package calc;
+
+public class Calculator {
+    public static void main(String args[]) throws ParseException {
+        double answer;
+        Calculator parser = new Calculator(System.in);
+
+        while (true) {
+            System.out.println("Reading from standard input...");
+            System.out.print("Enter an expression like \"1+(2+3)*4;\" or \"sin(0.5)+cos(1.0);\" :");
+            try {
+                answer = Calculator.one_line();
+                System.out.print("Answer = ");
+                System.out.println(answer);
+            } catch (Exception e) {
+                System.out.println("NOK.");
+                System.out.println(e.getMessage());
+                Calculator.ReInit(System.in);
+            } catch (Error e) {
+                System.out.println("Oops.");
+                System.out.println(e.getMessage());
+                break;
+            }
+        }
+    }
+}
+
+PARSER_END(Calculator)
+
+// Skip spaces, tabs, newlines
+SKIP : {
+    " " | "\r" | "\t" | "\n"
+}
+
+// Tokens for operators
+TOKEN : {
+    < PLUS: "+" >
+  | < MINUS: "-" >
+  | < MULTIPLY: "*" >
+  | < DIVIDE: "/" >
+  | < COMMA: "," >
+  | < LPAREN: "(" >
+  | < RPAREN: ")" >
+  | < SEMICOLON: ";" >
+}
+
+// Tokens for functions
+TOKEN : {
+    < SIN: "sin" >
+  | < COS: "cos" >
+  | < TAN: "tan" >
+  | < SQRT: "sqrt" >
+  | < POWER: "power" >
+}
+
+// Tokens for numbers
+TOKEN : {
+    < DOUBLE: (["0"-"9"])+ "." (["0"-"9"])* | "." (["0"-"9"])+ >
+  | < CONSTANT: (["0"-"9"])+ >
+}
+
+
+// Main entry: a full expression line
+double one_line() :
+{
+    double result = 0;
+}
+{
+    ( result = sum() <SEMICOLON> { return result; } )
+    | ( <SEMICOLON> { return result; } )
+}
+
+// Parse sums and subtractions
+double sum() :
+{
+    double result;
+    double value;
+    Token t;
+}
+{
+    result = term()
+    (
+        ( t = <PLUS> | t = <MINUS> )
+        value = term()
+        {
+            if (t.kind == PLUS) result += value;
+            else result -= value;
+        }
+    )*
+    { return result; }
+}
+
+// Parse multiplication/division
+double term() :
+{
+    double result, value;
+    Token t;
+}
+{
+    result = unary()
+    (
+        ( t = <MULTIPLY> | t = <DIVIDE> )
+        value = unary()
+        {
+            if (t.kind == MULTIPLY) result *= value;
+            else result /= value;
+        }
+    )*
+    { return result; }
+}
+
+// Parse unary operations: allow minus in front of numbers or expressions
+double unary() :
+{
+    double result;
+}
+{
+    ( <MINUS> result = element() { return -result; } )
+  | ( result = element() { return result; } )
+}
+
+// Parse basic elements: numbers, parentheses, and functions
+double element() :
+{
+    double result;
+    double arg1, arg2;
+}
+{
+    (
+        <CONSTANT> { result = Double.parseDouble(token.image); }
+      | <DOUBLE> { result = Double.parseDouble(token.image); }
+      | <LPAREN> result = sum() <RPAREN>
+      | <SIN> <LPAREN> result = sum() <RPAREN> { result = Math.sin(result); }
+      | <COS> <LPAREN> result = sum() <RPAREN> { result = Math.cos(result); }
+      | <TAN> <LPAREN> result = sum() <RPAREN> { result = Math.tan(result); }
+      | <SQRT> <LPAREN> result = sum() <RPAREN> { result = Math.sqrt(result); }
+      | <POWER> <LPAREN> arg1 = sum() <COMMA> arg2 = sum() <RPAREN> { result = Math.pow(arg1, arg2); }
+    )
+    { return result; }
+}
