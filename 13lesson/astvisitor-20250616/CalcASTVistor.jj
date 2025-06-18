@@ -1,0 +1,240 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */
+options
+{
+  static = true;
+}
+
+PARSER_BEGIN(CalcASTVisitor)
+package astvisitor;
+
+public class CalcASTVisitor
+{
+  public static void main(String args []) throws ParseException
+  {
+    ASTExpression expression;
+    
+    CalcASTVisitor parser = new CalcASTVisitor(System.in);
+    while (true)
+    {
+      System.out.println("Reading from standard input...");
+      System.out.print("Enter an expression like \"1+(2+3)*4;\" :");
+     try
+      {
+        EvalTree evaltree = new EvalTree();
+        expression = parser.one_line();
+        Object result = expression.accept(evaltree);
+        Double value = ((Double) result).doubleValue();
+		System.out.println("Answer = " + value);
+		// System.out.println(answer);
+		System.out.println("AST Tree");
+
+		// expression.print(0);
+
+		// uncomment the following to test PrintTree visitor
+		PrintTree printree = new PrintTree();
+		expression.accept(printree);
+      }
+      catch (Exception e)
+      {
+        System.out.println("NOK.");
+        System.out.println(e.getMessage());
+        CalcASTVisitor.ReInit(System.in);
+      }
+      catch (Error e)
+      {
+        System.out.println("Oops.");
+        System.out.println(e.getMessage());
+        break;
+      }
+      
+      /*
+      try
+      {
+        switch (Calculator.one_line())
+        {
+          case 0 : 
+          System.out.println("OK.");
+          break;
+          case 1 : 
+          System.out.println("Goodbye.");
+          break;
+          default : 
+          break;
+        }
+      }
+      catch (Exception e)
+      {
+        System.out.println("NOK.");
+        System.out.println(e.getMessage());
+        Calculator.ReInit(System.in);
+      }
+      catch (Error e)
+      {
+        System.out.println("Oops.");
+        System.out.println(e.getMessage());
+        break;
+      }
+      */
+    }
+  }
+}
+
+PARSER_END(CalcASTVisitor)
+
+SKIP :
+{
+  " "
+| "\r"
+| "\t"
+| "\n"
+}
+
+TOKEN : /* OPERATORS */
+{
+  < PLUS : "+" >
+| < MINUS : "-" >
+| < MULTIPLY : "*" >
+| < DIVIDE : "/" >
+}
+
+TOKEN :
+{
+  < CONSTANT : (< DIGIT >)+ >
+| < DOUBLE : (< DIGIT >)+ "." (< DIGIT >)* >
+| < #DIGIT : [ "0"-"9" ] >
+}
+
+ASTExpression one_line() :
+{
+  	// this the result to return;
+	ASTExpression result = null;
+}
+{
+  result = sum() ";"
+  {
+    return result; // this is temporary return to be fixed
+  }
+| ";"
+  {
+    return result;
+  }
+}
+
+ASTExpression sum() :
+{
+	ASTExpression left;
+	ASTExpression right;
+	Token t;
+}
+{
+  left = term() 
+  (
+    (
+      t = < PLUS >
+    | t = < MINUS >
+    )
+    right = term()
+    {
+    	left = new ASTOperatorExpression(left, right, t.image);
+    }
+  )*
+  {
+    return left;
+  }
+}
+
+/*
+ASTExpression sum() :
+{
+	ASTExpression left;
+	ASTExpression right;
+	Token t;
+}
+{
+  left = term() 
+  (
+    (
+      t = < PLUS >
+    | t = < MINUS >
+    )
+    right = term()
+    {
+      if (t.kind == PLUS) { 
+      	left = new ASTOperatorExpression(left, right, ASTOperatorExpression.PLUS);
+     }
+      else { 
+      	left = new ASTOperatorExpression(left, right, ASTOperatorExpression.MINUS);
+     }
+    }
+  )*
+  {
+    return left;
+  }
+}
+*/
+
+/*
+ASTExpression sum() :
+{
+	ASTExpression result;
+}
+{
+  result = term() 
+  (
+    (
+      < PLUS >
+    | < MINUS >
+    )
+    term()
+  )*
+  {
+    return result;
+  }
+}
+*/
+
+ASTExpression term() :
+{
+  ASTExpression left, right;
+  Token t;
+}
+{
+  left = unary()
+  (
+    (
+      t = < MULTIPLY >
+    | t = < DIVIDE >
+    )
+    right = unary()
+    {
+      	left = new ASTOperatorExpression(left, right, t.image);
+    }
+   )*
+  {
+    return left;
+  }
+}
+
+ASTExpression unary() :
+{
+  ASTExpression result;
+}
+{
+  < MINUS > result = element() {
+    	return new ASTOperatorExpression(new ASTDoubleLiteral(0.0), result, ASTOperatorExpression.MINUS);
+  }
+| result = element() { return result; }
+}
+
+ASTExpression element() :
+{
+  ASTExpression result;
+  Token t;
+}
+{
+  t = < CONSTANT > { return new ASTDoubleLiteral(t.image); }
+| t = < DOUBLE > { return new ASTDoubleLiteral(t.image); }
+| "(" result = sum() ")" {  return result; }
+}
