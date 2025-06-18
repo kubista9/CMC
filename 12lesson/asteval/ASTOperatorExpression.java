@@ -57,7 +57,7 @@ public class ASTOperatorExpression extends ASTExpression {
 	void print(int indent_level) {
 		// Print indentation for this operator
 		for (int i = 0; i < indent_level; i++) {
-			System.out.print("      "); // 6 spaces for each indentation level
+			System.out.print(" "); // 6 spaces for each indentation level
 		}
 		
 		// Print the operator
@@ -65,14 +65,14 @@ public class ASTOperatorExpression extends ASTExpression {
 		
 		// Print left child with "|__ " prefix and increased indentation
 		for (int i = 0; i < indent_level; i++) {
-			System.out.print("      "); // Same base indentation
+			System.out.print(" "); // Same base indentation
 		}
 		System.out.print("|__ ");
 		_left.print(indent_level + 1);
 		
 		// Print right child with "|__ " prefix and increased indentation  
 		for (int i = 0; i < indent_level; i++) {
-			System.out.print("      "); // Same base indentation
+			System.out.print(" "); // Same base indentation
 		}
 		System.out.print("|__ ");
 		_right.print(indent_level + 1);

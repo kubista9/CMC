@@ -16,7 +16,7 @@ public class ASTDoubleLiteral extends ASTExpression {
 	
 	void print(int indent_level) {
 		for (int i = 0; i < indent_level; i++) {
-			System.out.print("      ");
+			System.out.print(" ");
 		}
 		if (_value == (int)_value) {
 			System.out.println((int)_value);
